@@ -1,0 +1,224 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">日志管理</h3>
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 350px;">
+						<input type="text" name="table_search" id="searchNameId"
+							class="form-control pull-right" placeholder="用户名">
+
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default btn-search">
+                                <i class="fa fa-search"></i>
+							</button>
+							<button type="button" class="btn btn-default btn-delete">删除</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+						    <th><input type="checkbox" id="checkAll">全选</th>
+							<th>用户名</th>
+							<th>操作</th>
+							<th>请求方法</th>
+							<th>请求参数</th>
+							<th>IP</th>
+							<th>执行时长</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyId">
+					    <tr>
+					       <td colspan="7">数据正在加载中...</td>
+					    </tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="pageId" class="box-footer clearfix" th:insert="common/page :: pageDiv"><!-- th:insert="common/page :: pageDiv" -->
+			
+			</div>
+			<!-- /.box-body -->
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+<script type="text/javascript">
+  $(function(){
+	 
+	  //如果log页面加载完成，加载分页
+	  //doPageUI();
+	  //页面加载完成之后加载日志信息数据
+	  //$("#pageId").load("doPageUI", doGetObjects);//pageId页面加载完成之后，执行doPageUI，不管doPageUI有没有成功，都会执行doGetObjects
+	  doGetObjects();
+	  //注册根据用户名进行查询的点击事件
+	  $(".input-group-btn").on("click",".btn-search",doQueryObject);
+	  //页面加载注册点击事件
+	  $(".input-group-btn").on("click",".btn-delete",doDeleteObject);
+	  //注册全选Checkbox事件
+	  $("#checkAll").change(doSetCheckAllAndOtherCheckbox);
+	  //注册子选框中的点击事件（当子选框全部选中的时候把复选框加载完成）
+	  $("#tbodyId").on("change",".cBox",doChangeotherCheckboxandSetCheck)
+  })
+  //当子选框点击时，判定是否要修改全选框的值
+  function doChangeotherCheckboxandSetCheck(){
+	  var flag = true;
+	  //获取所以子选框中的值，再进行&判定
+	  $("#tbodyId input[type='checkbox']").each(
+		function(){
+			flag=flag&&$(this).prop("checked");
+		}	  
+	  
+	  );
+	  //修改全选框的值
+	  $("#checkAll").prop("checked",flag);
+  }
+  
+  //基于全选框checkbox的变化，更改其它checkbox的值
+  function doSetCheckAllAndOtherCheckbox(){
+	  //获取checkAll的状态值
+	  var flag = $(this).prop("checked");
+	  //更改其它checkbox值
+	  $("#tbodyId input[type='checkbox']").prop("checked",flag);
+  }
+  
+  
+  //获取用户选中的日志信息的ids
+  function doGetCheckedIds(){
+	  var raary = [];
+	  //获取选中的Checkbox   #tbodyId容器里面的  input标签 中type（类型）=checkbox的所有对象
+	  $("#tbodyId input[type='checkbox']").each(//each进行循环执行function方法
+			  function(){
+		  	   if($(this).prop("checked")){//每个类型为Checkbox的input的元素，都有一个名字为checked属性（true/false）
+		  		   raary.push($(this).val());
+		  	   }  
+	  })
+	  return raary;
+	 
+  }
+  
+  //根据用户选择的信息进行删除事件
+  function doDeleteObject(){
+	  debugger
+	  //1.获取用户选中的ID
+	  var raary = doGetCheckedIds();
+	  //console.log(raary);
+	  //2、params参数获取
+	  if(raary!=null&&raary.length==0){
+		  alert("请你选中要删除的对象！");
+		  return;
+	  }
+	  //让用户确诊是否要删除 
+	  if(!confirm("确定要删除吗？"))return;
+	  //3、url请求路径
+		  var url = "/log/doDeleteObjects";
+	  //确诊参数
+	  var params = {"ids":raary.toString()};//数组转换字符串
+	  //4、ajax请求
+	  $.get(url,params,function(result){
+		  if(result.state==1){
+			  alert(result.message);
+			  //doGetObjects();
+			  doRefreshAfterDeleteOk();
+		  }else{
+			  alert(result.message);
+		  }
+	  })
+  }
+  //判定该页面是否是最后一页，如果是需要调转到上一页面
+  function doRefreshAfterDeleteOk(){
+	 
+	  var pageCurrent = $("#pageId").data("pageCurrent");
+	  var pageCount = $("#pageId").data("pageCount");
+	  var checkAll = $("#checkAll").prop("checked");
+	  if(pageCurrent=pageCount&&checkAll&&pageCurrent>1){
+		  pageCurrent--;
+		  $("#pageId").data("pageCurrent",pageCurrent);
+	  }
+	  doGetObjects();
+  }
+  
+  //根据用户查询日志信息
+  function doQueryObject(){
+	  //debugger
+	  //调用查询前，先初始化页码值
+	  $("#pageId").data("pageCurrent",1);
+	  //调用查询方法（在查询方法中添加参数绑定username）
+	  doGetObjects();
+  }
+  //加载log页面
+ 
+  //查询用户日志信息
+  function doGetObjects(){
+	  //当页面加载的时候，取消全选框
+	  $("#checkAll").prop("checked",false);
+	  //debugger
+	  //1:请求参数
+	  //var params= 1;
+  	  var pageCurrent = $("#pageId").data("pageCurrent");
+  	  if(!pageCurrent)pageCurrent=1;
+  	  var params = {pageCurrent:pageCurrent};
+  	  //获取输入框架中的用户名
+  	  var uname = $("#searchNameId").val();//val()是jquery函数中的获取input输入框的值
+  	  //console.log("username",uname);
+  	  //如果username并不为空，则把它绑定到参数中
+  	  if(uname)params.username=uname;
+  	  console.log("params",params);
+	  //2:请求URL
+	  var url = "log/doFindLogObject";
+	  //3：处理请求结果数据
+	  $.getJSON(url,params,function(result){
+		  if(result.state==1){
+			  
+			  doSetTableBodyRows(result.data.records);//把响应结果取出展示出来
+			//页面加载完成之后加载分页信息
+			  doPageObject(result.data);
+			  
+		  }else{
+			  doSetQueryErrorRefalst(result);
+			  //alert(result.message);//弹出错误提示
+		  }
+	  });
+  }
+  //查询出现异常，初始页面与提示错误信息给用户
+  function doSetQueryErrorRefalst(result){
+	  $("#tbodyId").html("<tr><td>"+result.message+"</td></tr>");
+		//设置总行数
+		$(".rowCount").html("总记录数(0)");
+		//设置总页数
+		$(".pageCount").html("总页数(0）");
+		//当前页
+		$(".pageCurrent").html("当前页(0)");
+  }
+  //根据数据拼接进行数据展示
+  function doSetTableBodyRows(result){
+	  let trs = "";//ES6里面定义的规范
+	  result.forEach((item)=>{//item 是迭代的每一个对象
+		  trs+="<tr>"+
+			"<td><input type='checkbox' class='cBox' value='"+item.id+"'/></td>"+
+			"<td>"+item.username+"</td>"+
+			"<td>"+item.operction+"</td>"+
+			"<td>"+item.method+"</td>"+
+			"<td>"+item.parms+"</td>"+
+			"<td>"+item.ip+"</td>"+
+			"<td>"+item.time+"</td>"+
+		"</tr>";
+	  });
+	 
+	  //var toby = document.getElementById("tbodyId");
+	  //toby.innerHTML=trs;
+	  $("#tbodyId").html(trs);
+  }
+  
+  
+ 
+</script>
+
+
+
+
+
+

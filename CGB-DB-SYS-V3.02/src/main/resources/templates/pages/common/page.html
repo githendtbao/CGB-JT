@@ -1,0 +1,65 @@
+<div th:fragment="pageDiv" >
+<ul class="pagination pagination-sm no-margin pull-right">
+    <li><a class="first">首页</a></li>
+	<li><a class="pre">上一页</a></li>
+	<li><a class="next">下一页</a></li>
+	<li><a class="last">尾页</a></li>
+	<li><a class="rowCount">总记录数(0)</a></li>
+	<li><a class="pageCount">总页数(0)</a></li>
+	<li><a class="pageCurrent">当前页(1)</a></li>
+</ul>
+<script type="text/javascript">
+	//页面加载完成注册事件点击对象
+	$(function(){
+		//一起注册多个点击事件，并且声明点击的Class
+		$("#pageId").on("click",".first,.pre,.next,.last",JumpOnPage);
+		
+	})
+	//page页面加载完成之后就把数据展现出来
+	function doPageObject(PageObject){
+		//设置总行数
+		$(".rowCount").html("总记录数("+PageObject.rowCount+")");
+		//设置总页数
+		$(".pageCount").html("总页数("+PageObject.pageCount+")");
+		//当前页
+		$(".pageCurrent").html("当前页("+PageObject.pageCurrent+")");
+		//把页码值存入变量
+		$("#pageId").data("pageCurrent",PageObject.pageCurrent);
+		$("#pageId").data("pageCount",PageObject.pageCount);
+	}
+	function JumpOnPage(){
+		debugger
+		//获取当前被点击对象的Class属性的值
+		//.prop(··)为jquery中获取象属性的一个函数
+		//.prop(key,value) 当有value时就是对属性赋值(propertyName,propertyValue)
+		var lcs = $(this).prop("class");         //this指的是当前被点击的对象
+		//console.log(lcs);
+		var pageCurrent = $("#pageId").data("pageCurrent");
+		var pageCount = $("#pageId").data("pageCount");
+		//基于Class属性值，修改当前页码值
+		if(lcs=="first"){
+			pageCurrent=1;
+		}else if(lcs=="pre"&&pageCurrent>1){
+			pageCurrent--;
+		}else if(lcs=="next"&&pageCurrent<pageCount){
+			pageCurrent++;
+		}else if(lcs=="last"){
+			pageCurrent=pageCount;
+		}else{
+			return;
+		}
+		//根据当前页码值进行查询页面值
+		$("#pageId").data("pageCurrent",pageCurrent);
+		//alert(pageCurrent+lcs);
+		
+		doGetObjects();//此方法在log_list.html页面调用，重新获取页码值
+	}
+</script>
+
+
+</div>
+
+
+
+
+

@@ -1,0 +1,59 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cy.pj.dao.SysMentDao">
+
+	
+	
+
+	<!-- 根据菜单ID查询菜单当中有没有存在子菜单，反回子菜单id -->
+	<select id="getChlidCount" resultType="int">
+			select count(*) from sys_menus where parentId=#{id}
+	</select>
+
+
+	<!-- 表关联查询 -->
+	<select id="findObject" resultType="map">
+			select c.*,cc.name parentName 
+			from sys_menus c
+			left join sys_menus cc
+			on c.parentid=cc.id
+	</select>
+	
+	<!-- 嵌套查询 -->
+	<!--  <select  id="findObject" resultType="map">
+		 select c.*，(select p.name from sys_menus p where c.parentid=p.id) parentName
+		 from sys_menus c
+	</select>
+	-->
+	
+	<insert id="insertObject" parameterType="com.cy.pj.sys.entity.SysMenu">
+		insert into sys_menus
+		(name,url,
+		type,sort,note,
+	 	parentId,permission,createdUser,
+	 	modifiedUser,createdTime,modifiedTime)
+	 	values
+	 	(#{name},#{url},
+	 	#{type},#{sort},#{note},
+	 	#{parentId},#{permission},#{createdUser},
+	 	#{modifiedUser},now(),now())
+	</insert>
+	
+	<update id="updateObject" parameterType="com.cy.pj.sys.entity.SysMenu">
+		update sys_menus
+		set
+		name=#{name},
+           type=#{type},
+           sort=#{sort},
+           url=#{url},
+           parentId=#{parentId},
+           permission=#{permission},
+           modifiedUser=#{modifiedUser},
+           modifiedTime=now()
+        where 
+        	id=#{id}
+	</update>
+	
+</mapper>

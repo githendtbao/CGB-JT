@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.cy.pj.dao.SysUserDao">
+	
+	<!-- 查询所有记录总数（如果username为空） -->
+	<select id="getRowCount" resultType="int">
+		select count(*)
+		from sys_users
+		<where>
+			<if test="username!=null and username!=''">
+				username=#{username}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 嵌套查询所有用户信息 -->
+	<!-- 一般应用于many2one或one2one做关联查询
+                  在当前应用是基于deptId查询部门信息并将其
+                 存储到SysUserDeptVo对象的sysDept属性中。
+             -->
+	<!-- <resultMap type="com.cy.pj.sys.vo.SysUserDeptVo" id="SysUserDeptVo">
+		<id column="id" property="id"/>
+		<association property="sysDept" column="deptId"
+		select="com.cy.pj.dao.SysDeptDao.findById">
+			
+		</association>
+	</resultMap>
+	
+	<select id="findPageObjects" resultMap="SysUserDeptVo">
+		select 
+		id,username,password,salt,
+		email,mobile,valid,deptId,
+		createdTime,modifiedTime,createdUser,modifiedUser
+		from sys_users 
+		<where>
+			<if test="username!=null and username!=''">
+				username like concat("%",#{username},"%")
+			</if>
+		</where>
+		order by createdTime desc
+		limit #{startIndex},#{pageSize}
+	</select> -->
+	
+	<resultMap id="SysUserDeptVos" type="com.cy.pj.sys.vo.SysUserDeptVo" >
+		<id property="id" column="id" />
+		<result property="username" column="username" />
+		<result property="password" column="password" />
+		<result property="salt" column="salt" />
+		<result property="email" column="email" />
+		<result property="mobile" column="mobile" />
+		<result property="valid" column="valid" />
+		<result property="createdTime" column="createdTime" />
+		<result property="modifiedTime" column="modifiedTime" />
+		<result property="createdUser" column="createdUser" />
+		<result property="modifiedUser" column="modifiedUser" />
+		<association property="sysDept" >
+			<id column="dept_id"/>
+			<result property="name" column="name"  />
+			<result property="note" column="note"  />
+		</association>
+	</resultMap>
+	<select id="findPageObjects" resultMap="SysUserDeptVos">
+		select 
+		u.id,u.username,u.password,u.salt,
+		u.email,u.mobile,u.valid,d.id dept_id,d.name,d.note,
+		u.createdTime,u.modifiedTime,u.createdUser,u.modifiedUser
+		from sys_users u left join sys_depts d
+		on u.deptId=d.id
+		<where>
+			<if test="username!=null and username!=''">
+				u.username like concat("%",#{username},"%")
+			</if>
+		</where>
+		order by u.createdTime desc
+		limit #{startIndex},#{pageSize}
+	</select>
+	
+	
+	
+	
+	
+	
+</mapper>
